@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CallMind - Il tuo assistente per il relax</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-image: url('https://cdn.discordapp.com/attachments/1134533272441983086/1278830901270417440/mare-blu-con-onde-e-cielo-con-nuvole-calmo-tranquillo-mare-blu-sfondo-rilassante-con-spazio-per-la-copia_1962-2902.jpg?ex=66d23b96&is=66d0ea16&hm=29ebed011d871dcf33c5b170acc57f74e11f1946fa181896bc29d8b471904a39&');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .modal-button {
+            background-color: #66b3ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .modal-button.cancel {
+            background-color: #d9534f;
+        }
+
+        .modal-button.accept {
+            background-color: #5bc0de;
+        }
+
+        .modal-button:hover {
+            background-color: #55aaff;
+            transform: scale(1.05);
+        }
+
+        .content-container {
+            background-color: #ffffffd1;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .exercise-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .exercise-buttons button {
+            background-color: #66b3ff;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            width: calc(50% - 20px); /* Two buttons per row with gap */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .exercise-buttons button:hover {
+            background-color: #55aaff;
+            transform: scale(1.05);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e0f7ff;
+            border-radius: 10px;
+            text-align: left;
+            width: 100%;
+        }
+
+        /* Audio player styles */
+        .audio-player {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .audio-player audio {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal -->
+    <div id="disclaimer-modal" class="modal">
+        <div class="modal-content">
+            <h2>Disclaimer</h2>
+            <p>Benvenuto su CallMind. Si prega di notare che le risposte fornite sono per puro scopo di rilassamento e benessere. Non ci assumiamo alcuna responsabilità per l'uso delle informazioni fornite. Utilizza il servizio con discrezione e prendi cura del tuo benessere mentale.</p>
+            <p>Se desideri supportare il nostro lavoro, puoi fare una donazione tramite PayPal:</p>
+            <!-- PayPal Button -->
+            <div class="paypal-button-container">
+                <form action="https://www.paypal.com/donate" method="post" target="_blank">
+                    <input type="hidden" name="business" value="santivad@outlook.it">
+                    <input type="hidden" name="currency_code" value="EUR">
+                    <input type="submit" value="Dona tramite PayPal" class="modal-button accept">
+                </form>
+            </div>
+            <button class="modal-button accept" id="accept-button">Accetto</button>
+            <button class="modal-button cancel" id="cancel-button">Rifiuto</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-container" id="content-container" style="display: none;">
+        <h1>🌿 CallMind 🌿</h1>
+        <div class="exercise-buttons">
+            <button id="breathing-button">Esercizio di Respirazione</button>
+            <button id="meditation-button">Meditazione Guidata</button>
+            <button id="stretching-button">Stretching</button>
+            <button id="relaxation-button">Rilassamento Muscolare</button>
+            <button id="sounds-button">Suoni Rilassanti</button> <!-- Bottone per suoni rilassanti -->
+            <button id="anxiety-button">Frasi Anti-Ansia</button> <!-- Nuovo bottone per frasi anti-ansia -->
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="audio-player">
+        <audio controls>
+            <source src="https://www.bensound.com/bensound-music/bensound-slowmotion.mp3" type="audio/mpeg">
+            Il tuo browser non supporta il tag audio.
+        </audio>
+    </div>
+
+    <script>
+        const disclaimerModal = document.getElementById('disclaimer-modal');
+        const acceptButton = document.getElementById('accept-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const contentContainer = document.getElementById('content-container');
+        const result = document.getElementById('result');
+
+        const exercises = {
+            "breathing": [
+                "Prova questo esercizio di respirazione: Inspira profondamente contando fino a 4, trattieni il respiro per 4 secondi, poi espira lentamente contando fino a 6. Ripeti per qualche minuto.",
+                "Per un effetto calmante, respira attraverso il naso per 4 secondi, trattieni per 4 secondi e poi espira lentamente attraverso la bocca per 8 secondi.",
+                "Quando ti senti ansioso, prova a concentrare la tua attenzione sul ritmo della tua respirazione. Questo può aiutare a ridurre l'ansia e migliorare il tuo stato mentale."
+            ],
+            "meditation": [
+                "Trova un posto tranquillo, chiudi gli occhi e concentrati sul tuo respiro. Se i pensieri vagano, riporta gentilmente l'attenzione al respiro. Continua per almeno 5-10 minuti.",
+                "Durante la meditazione, cerca di osservare i tuoi pensieri senza giudicarli. Lascia che vadano e venga l'attenzione al respiro.",
+                "Visualizza un luogo che ti rilassa, come una spiaggia o una foresta. Immagina di essere lì e cerca di percepire tutti i dettagli sensoriali di quel luogo."
+            ],
+            "stretching": [
+                "Ecco un esercizio di stretching semplice: allunga le braccia sopra la testa, intreccia le dita e spingile verso l'alto mentre ti sollevi sulle punte dei piedi. Mantieni la posizione per 10 secondi, poi rilascia.",
+                "Per un allungamento rapido, inclina lentamente la testa verso un lato e mantieni la posizione per 15-20 secondi. Poi, cambia lato. Questo può alleviare la tensione nel collo.",
+                "Prova a sederti sul pavimento con le gambe allungate e piegati lentamente in avanti cercando di toccare le punte dei piedi. Mantieni la posizione per 20-30 secondi."
+            ],
+            "relaxation": [
+                "Per il rilassamento muscolare progressivo, inizia contraendo e poi rilasciando i muscoli dei piedi, poi passa gradualmente verso l'alto coinvolgendo le gambe, l'addome, le braccia e il viso.",
+                "Prova a chiudere gli occhi e concentrati su ogni gruppo muscolare, contraendoli e poi rilassandoli uno alla volta. Questo aiuta a liberare la tensione accumulata.",
+                "Per un effetto immediato, sdraiati in una posizione comoda, chiudi gli occhi e immagina di essere in un luogo calmo e sereno. Respira profondamente e lascia andare tutte le tensioni."
+            ]
+        };
+
+        const anxietyTips = [
+            "Non sei solo nell'affrontare l'ansia. Molti altri stanno vivendo esperienze simili e trovare supporto può fare una grande differenza.",
+            "Ricorda che è normale sentirsi ansiosi in situazioni nuove o stressanti. Prendersi cura di se stessi e parlare con amici o professionisti può aiutare.",
+            "Fai attenzione ai tuoi pensieri e cerca di sfidarli con pensieri più positivi e realistici. L'auto-compassione è una chiave importante per gestire l'ansia."
+        ];
+
+        function showExercise(exercise) {
+            const phrases = exercises[exercise];
+            result.innerHTML = phrases[Math.floor(Math.random() * phrases.length)];
+        }
+
+        function showAnxietyTips() {
+            result.innerHTML = anxietyTips[Math.floor(Math.random() * anxietyTips.length)];
+        }
+
+        acceptButton.addEventListener('click', () => {
+            disclaimerModal.style.display = 'none';
+            contentContainer.style.display = 'flex'; // Show content after acceptance
+        });
+
+        cancelButton.addEventListener('click', () => {
+            alert('Non puoi accedere al servizio senza accettare il disclaimer.');
+            window.location.href = 'about:blank'; // Redirect to a blank page or close the window
+        });
+
+        document.getElementById('breathing-button').addEventListener('click', () => showExercise('breathing'));
+        document.getElementById('meditation-button').addEventListener('click', () => showExercise('meditation'));
+        document.getElementById('stretching-button').addEventListener('click', () => showExercise('stretching'));
+        document.getElementById('relaxation-button').addEventListener('click', () => showExercise('relaxation'));
+
+        document.getElementById('sounds-button').addEventListener('click', () => {
+            window.open('https://www.youtube.com/watch?v=_5tyPtVtinI', '_blank');
+        });
+
+        document.getElementById('anxiety-button').addEventListener('click', () => showAnxietyTips());
+
+        // Show the modal on page load
+        window.onload = () => {
+            disclaimerModal.style.display = 'flex';
+        };
+    </script>
+</body>
+</html>
